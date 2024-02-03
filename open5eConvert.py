@@ -218,10 +218,10 @@ def main():
     parser = argparse.ArgumentParser(
                         description='Convert open5e content into Docx format',
                         epilog='You can do it!!')
-    parser.add_argument('-f', '--feature',
+    parser.add_argument('-f', '--feature', required=True,
                         help='the feature type you are interested in fetching from open5e',
                         choices=['monsters', 'spells', 'magicitems', 'feats'])
-    parser.add_argument('-s', '--source',
+    parser.add_argument('-s', '--source', required=True,
                         help='the source of the data you want to import from open5e',
                         choices=['menagerie', 'wotc-srd', 'a5e', 'dmag', 'dmag-e', 'warlock', 'kp', 'toh', 'tob', 'tob2', 'tob3', 'cc', 'taldorei', 'vom'])
     parser.add_argument('-t', '--title', dest='doc_title', default='', help='the title of the document you want to create')

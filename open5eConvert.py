@@ -3,9 +3,11 @@ import requests
 import sys
 import getopt
 from docx import Document
-from fractions import Fraction
 
 def speed_to_text(speed):
+    for k, v in speed.items():
+        if k not in ['walk', 'burrow', 'climb', 'fly', 'swim', 'hover']:
+            sys.exit(f'invalid speed key found: {k}')
     speed_text = ""
     if 'walk' in speed:
         speed_text = speed_text + f"{speed['walk']} ft."
@@ -20,7 +22,7 @@ def speed_to_text(speed):
     if 'fly' in speed:
         if speed_text != "":
             speed_text = speed_text + ", "
-        speed_text = speed_text + f"Fly {speed['fly']} ft."
+        speed_text = speed_text + f"Fly {speed['fly']} ft.{' (hover)' if 'hover' in speed and speed['hover'] else ''}"
     if 'swim' in speed:
         if speed_text != "":
             speed_text = speed_text + ", "
@@ -89,7 +91,7 @@ def monster_import(results, doc):
         doc.add_paragraph("Condition Immunities " + str(monster['condition_immunities']))
         doc.add_paragraph("Senses " + str(monster['senses']))
         doc.add_paragraph("Languages " + str(monster['languages']))
-        doc.add_paragraph("Challenge " + str(Fraction(monster['cr'])))
+        doc.add_paragraph("Challenge " + str(monster['challenge_rating']))
 
         if monster['actions']:
             doc.add_heading("Actions", level=3)
@@ -219,13 +221,16 @@ def main():
         ["title=", "feature=", "source=", "out="]
     )
 
-    feature = "monsters"
-    source = "menagerie"
+    feature = ""
+    source = ""
     doc_title = ""
     doc_filename = ""
     for opt, arg in opts:
         if opt in ['-f', '--feature']:
             feature = arg.lower()
+            if feature not in ['monsters', 'spells', 'magicitems', 'feats']:
+                sys.exit(f"Invalid feature {feature}. Valid features are " +
+                         "monsters, spells, items, and feats.")
             print(feature)
         if opt in ['-s', '--source']:
             source = arg.lower()
@@ -236,37 +241,42 @@ def main():
         if opt in ['-o', '--out']:
             doc_filename = arg
             print(doc_filename)
+    source_name = ""
+    if (source == 'menagerie'):
+        source_name = 'Level Up Advanced 5e Monstrous Menagerie'
+    elif (source == 'wotc-srd'):
+        source_name = '5e Core Rules'
+    elif (source == 'a5e'):
+        source_name = 'Level Up Advanced 5e'
+    elif (source == 'dmag'):
+        source_name = 'Deep Magic 5e'
+    elif (source == 'dmag-e'):
+        source_name = 'Deep Magic Extended'
+    elif (source == 'warlock'):
+        source_name = 'Warlock Archives'
+    elif (source == 'kp'):
+        source_name = 'Kobold Press Compilation'
+    elif (source == 'toh'):
+        source_name = 'Tome of Heroes'
+    elif (source == 'tob'):
+        source_name = 'Tome of Beasts'
+    elif (source == 'tob2'):
+        source_name = 'Tome of Beasts 2'
+    elif (source == 'tob3'):
+        source_name = 'Tome of Beasts 3'
+    elif (source == 'cc'):
+        source_name = 'Creature Codex'
+    elif (source == 'taldorei'):
+        source_name = 'Critical Role: Tal’Dorei Campaign Setting'
+    else:
+        sys.exit(f"Invalid source {source}. Valid sources are " +
+                    "menagerie, wotc-srd, a5e, dmag, dmag-e, warlock, kp, toh, tob, tob2, tob3, cc, taldorei.")
     if (doc_title == ""):
-        source_name = ""
-        if (source == 'menagerie'):
-                source_name = 'Level Up Advanced 5e Monstrous Menagerie'
-        elif (source == 'wotc-srd'):
-                source_name = '5e Core Rules'
-        elif (source == 'a5e'):
-                source_name = 'Level Up Advanced 5e'
-        elif (source == 'dmag'):
-                source_name = 'Deep Magic 5e'
-        elif (source == 'dmag-e'):
-                source_name = 'Deep Magic Extended'
-        elif (source == 'warlock'):
-                source_name = 'Warlock Archives'
-        elif (source == 'kp'):
-                source_name = 'Kobold Press Compilation'
-        elif (source == 'toh'):
-                source_name = 'Tome of Heroes'
-        elif (source == 'tob'):
-                source_name = 'Tome of Beasts'
-        elif (source == 'tob2'):
-                source_name = 'Tome of Beasts 2'
-        elif (source == 'tob3'):
-                source_name = 'Tome of Beasts 3'
-        elif (source == 'cc'):
-                source_name = 'Creature Codex'
-        elif (source == 'taldorei'):
-                source_name = 'Critical Role: Tal’Dorei Campaign Setting'
         doc_title = f"{source.capitalize() if source_name == '' else source_name} {feature.capitalize()}"
+        print(f"No title provided, using default title '{doc_title}'")
     if (doc_filename == ""):
         doc_filename = f"{doc_title}.docx"
+        print(f"No filename provided, using default filename '{doc_filename}'")
 
     doc = setup_document(title=doc_title)
 
@@ -274,10 +284,12 @@ def main():
     page_no = 0
     params = {'document__slug__iexact': source, 'page': page_no}
     results = []
+    sys.stdout.write(f"Downloading https://api.open5e.com/v1/{feature}")
     while True:
         params['page'] += 1
         try:
-            print(f"https://api.open5e.com/v1/{feature}")
+            sys.stdout.write(".")
+            sys.stdout.flush()
             r = requests.get(f"https://api.open5e.com/v1/{feature}", params=params)
             r.raise_for_status()
         except requests.exceptions.HTTPError as err:
@@ -286,6 +298,7 @@ def main():
         df = pd.DataFrame(r.json())
         for x in df['results'].items():
             results.append(x[1])
+    sys.stdout.write("Done!\n")
 
     if (feature == 'monsters'):
         print("Importing Monsters")

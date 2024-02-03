@@ -217,8 +217,8 @@ def main():
 
     opts, args = getopt.getopt(
         argv,
-        "t:f:s:o:",
-        ["title=", "feature=", "source=", "out="]
+        "t:f:s:o:h",
+        ["title=", "feature=", "source=", "out=", "help"]
     )
 
     feature = ""
@@ -268,9 +268,11 @@ def main():
         source_name = 'Creature Codex'
     elif (source == 'taldorei'):
         source_name = 'Critical Role: Tal’Dorei Campaign Setting'
+    elif (source == 'vom'):
+        source_name = 'Vault of Magic'
     else:
         sys.exit(f"Invalid source {source}. Valid sources are " +
-                    "menagerie, wotc-srd, a5e, dmag, dmag-e, warlock, kp, toh, tob, tob2, tob3, cc, taldorei.")
+                    "menagerie, wotc-srd, a5e, dmag, dmag-e, warlock, kp, toh, tob, tob2, tob3, cc, taldorei, vom.")
     if (doc_title == ""):
         doc_title = f"{source.capitalize() if source_name == '' else source_name} {feature.capitalize()}"
         print(f"No title provided, using default title '{doc_title}'")

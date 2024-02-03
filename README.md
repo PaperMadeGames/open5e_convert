@@ -3,7 +3,7 @@ A python script to extract data from open5e and format it in Docx files that are
 
 To use this script simply make sure all python packages are loaded and then cd into the folder and execute the script. (Better directions are coming)
 
--f or --feater= will set the feature to fetch from open5e. Currently the code supports the following `features` that you can import from open5e:
+-f or --feature= will set the feature to fetch from open5e. Currently the code supports the following `features` that you can import from open5e:
 
 - monsters
 - spells
@@ -26,6 +26,12 @@ To use this script simply make sure all python packages are loaded and then cd i
 - cc - Creature Codex (monsters)
 - taldorei - Critical Role: Tal’Dorei Campaign Setting (monsters, magicitems, feats)
 - vom - Vault of Magic (magicitems)
+
+-t or --title= will set the title within the document that all the imported features will be under. (Default: <expanded source name> <feature>)
+
+-o or --out= will set the name of the docx file written. (Default: <title>)
+
+-h or --help will display a this help text
 
 ## Examples:
 To convert all creature codex monsters to Docx for shard import:

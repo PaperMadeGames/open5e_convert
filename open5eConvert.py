@@ -1,7 +1,7 @@
 import pandas as pd
 import requests
 import sys
-import getopt
+import argparse
 from docx import Document
 
 def speed_to_text(speed):
@@ -215,84 +215,71 @@ def feat_import(results, doc):
 def main():
     argv = sys.argv[1:]
 
-    opts, args = getopt.getopt(
-        argv,
-        "t:f:s:o:h",
-        ["title=", "feature=", "source=", "out=", "help"]
-    )
+    parser = argparse.ArgumentParser(
+                        description='Convert open5e content into Docx format',
+                        epilog='You can do it!!')
+    parser.add_argument('-f', '--feature',
+                        help='the feature type you are interested in fetching from open5e',
+                        choices=['monsters', 'spells', 'magicitems', 'feats'])
+    parser.add_argument('-s', '--source',
+                        help='the source of the data you want to import from open5e',
+                        choices=['menagerie', 'wotc-srd', 'a5e', 'dmag', 'dmag-e', 'warlock', 'kp', 'toh', 'tob', 'tob2', 'tob3', 'cc', 'taldorei', 'vom'])
+    parser.add_argument('-t', '--title', dest='doc_title', default='', help='the title of the document you want to create')
+    parser.add_argument('-o', '--out', dest='doc_filename', default='', help='the name of the output file')
+    args = parser.parse_args()
 
-    feature = ""
-    source = ""
-    doc_title = ""
-    doc_filename = ""
-    for opt, arg in opts:
-        if opt in ['-f', '--feature']:
-            feature = arg.lower()
-            if feature not in ['monsters', 'spells', 'magicitems', 'feats']:
-                sys.exit(f"Invalid feature {feature}. Valid features are " +
-                         "monsters, spells, items, and feats.")
-            print(feature)
-        if opt in ['-s', '--source']:
-            source = arg.lower()
-            print(source)
-        if opt in ['-t', '--title']:
-            doc_title = arg
-            print(doc_title)
-        if opt in ['-o', '--out']:
-            doc_filename = arg
-            print(doc_filename)
     source_name = ""
-    if (source == 'menagerie'):
+    if (args.source == 'menagerie'):
         source_name = 'Level Up Advanced 5e Monstrous Menagerie'
-    elif (source == 'wotc-srd'):
+    elif (args.source == 'wotc-srd'):
         source_name = '5e Core Rules'
-    elif (source == 'a5e'):
+    elif (args.source == 'a5e'):
         source_name = 'Level Up Advanced 5e'
-    elif (source == 'dmag'):
+    elif (args.source == 'dmag'):
         source_name = 'Deep Magic 5e'
-    elif (source == 'dmag-e'):
+    elif (args.source == 'dmag-e'):
         source_name = 'Deep Magic Extended'
-    elif (source == 'warlock'):
+    elif (args.source == 'warlock'):
         source_name = 'Warlock Archives'
-    elif (source == 'kp'):
+    elif (args.source == 'kp'):
         source_name = 'Kobold Press Compilation'
-    elif (source == 'toh'):
+    elif (args.source == 'toh'):
         source_name = 'Tome of Heroes'
-    elif (source == 'tob'):
+    elif (args.source == 'tob'):
         source_name = 'Tome of Beasts'
-    elif (source == 'tob2'):
+    elif (args.source == 'tob2'):
         source_name = 'Tome of Beasts 2'
-    elif (source == 'tob3'):
+    elif (args.source == 'tob3'):
         source_name = 'Tome of Beasts 3'
-    elif (source == 'cc'):
+    elif (args.source == 'cc'):
         source_name = 'Creature Codex'
-    elif (source == 'taldorei'):
+    elif (args.source == 'taldorei'):
         source_name = 'Critical Role: Tal’Dorei Campaign Setting'
-    elif (source == 'vom'):
+    elif (args.source == 'vom'):
         source_name = 'Vault of Magic'
     else:
-        sys.exit(f"Invalid source {source}. Valid sources are " +
+        sys.exit(f"Invalid source {args.source}. Valid sources are " +
                     "menagerie, wotc-srd, a5e, dmag, dmag-e, warlock, kp, toh, tob, tob2, tob3, cc, taldorei, vom.")
-    if (doc_title == ""):
-        doc_title = f"{source.capitalize() if source_name == '' else source_name} {feature.capitalize()}"
-        print(f"No title provided, using default title '{doc_title}'")
-    if (doc_filename == ""):
-        doc_filename = f"{doc_title}.docx"
-        print(f"No filename provided, using default filename '{doc_filename}'")
+    if (args.doc_title == ""):
+        args.doc_title = f"{args.source.capitalize() if source_name == '' else source_name} {args.feature.capitalize()}"
+        print(f"No title provided, using default title '{args.doc_title}'")
+    if (args.doc_filename == ''):
+        args.doc_filename = f"{args.doc_title}.docx"
+        print(f"No filename provided, using default filename '{args.doc_filename}'")
 
-    doc = setup_document(title=doc_title)
+    doc = setup_document(title=args.doc_title)
 
     # load data from API
     page_no = 0
-    params = {'document__slug__iexact': source, 'page': page_no}
+    params = {'document__slug__iexact': args.source, 'page': page_no}
     results = []
-    sys.stdout.write(f"Downloading https://api.open5e.com/v1/{feature}")
+    sys.stdout.write(f"Downloading https://api.open5e.com/v1/{args.feature}")
     while True:
         params['page'] += 1
         try:
             sys.stdout.write(".")
             sys.stdout.flush()
-            r = requests.get(f"https://api.open5e.com/v1/{feature}", params=params)
+            r = requests.get(f"https://api.open5e.com/v1/{args.feature}", params=params)
             r.raise_for_status()
         except requests.exceptions.HTTPError as err:
             break
@@ -302,23 +289,23 @@ def main():
             results.append(x[1])
     sys.stdout.write("Done!\n")
 
-    if (feature == 'monsters'):
+    if (args.feature == 'monsters'):
         print("Importing Monsters")
         monster_import(results, doc)
-    elif (feature == 'spells'):
+    elif (args.feature == 'spells'):
         print("Importing Spells")
         spell_import(results, doc)
-    elif (feature == 'magicitems'):
+    elif (args.feature == 'magicitems'):
         print("Importing Magic Items")
         item_import(results, doc)
-    elif (feature == 'feats'):
+    elif (args.feature == 'feats'):
         print("Importing feats")
         feat_import(results, doc)
 
 
     # Save the Word document
-    doc.save(doc_filename)
-    print ("wrote file " + doc_filename)
+    doc.save(args.doc_filename)
+    print ("wrote file " + args.doc_filename)
 
 
 main()

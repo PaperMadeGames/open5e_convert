@@ -200,7 +200,7 @@ def item_import(results, doc):
     for item in results:
         print('Importing ' + str(item['name']))
         doc.add_heading(str(item['name']), level=2)
-        doc.add_paragraph(f"{item['type']}, {item['rarity']} {'(' + item['requires_attunment'] + ')' if item['requires_attunment'] != '' else ''}")
+        doc.add_paragraph(f"{item['type']}, {item['rarity']} {'(' + item['requires_attunement'] + ')' if item['requires_attunement'] != '' else ''}")
         doc.add_paragraph(item['desc'])
 
 def feat_import(results, doc):

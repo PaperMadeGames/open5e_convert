@@ -151,11 +151,12 @@ def monster_import(results, doc):
                 runner.italic = True
                 p.add_run(a['desc'])
 
-def spell_import(results, doc):
+
+def spell_import(source, add_source, results, doc):
     doc.add_heading("Spells", level=1)
     for spell in results:
         print('Importing ' + str(spell['name']))
-        doc.add_heading(str(spell['name']), level=2)
+        doc.add_heading(f"{spell['name']}{' (' + source +')' if add_source else ''}", level=2)
         if (spell['level'] == 'Cantrip'):
             doc.add_paragraph(f"{spell['school']} {spell['level']}")
         else:
@@ -164,10 +165,12 @@ def spell_import(results, doc):
         doc.add_paragraph(f"Range {spell['range']}")
         doc.add_paragraph(f"Components {spell['components']}{' (' + spell['material'] + ')' if spell['material'] != '' else ''}")
         doc.add_paragraph(f"Duration {'concentration, ' if spell['concentration'] == 'yes' else '' }{spell['duration']}")
+        doc.add_paragraph(f"Source {source}")
         doc.add_paragraph(f"{'classes ' + spell['dnd_class'] if spell['dnd_class'] != '' else ''}")
         doc.add_paragraph(spell['desc'])
         doc.add_paragraph(spell['higher_level'])
 
+    #  No longer needed after shard fixed a bug but might be handy
     doc.add_heading("Artificer", level=1)
     for spell in results:
         if (spell['dnd_class'].find('Artificer') >= 0):
@@ -237,6 +240,7 @@ def main():
                         choices=['menagerie', 'wotc-srd', 'a5e', 'dmag', 'dmag-e', 'warlock', 'kp', 'toh', 'tob', 'tob2', 'tob3', 'cc', 'taldorei', 'vom'])
     parser.add_argument('-t', '--title', dest='doc_title', default='', help='the title of the document you want to create')
     parser.add_argument('-o', '--out', dest='doc_filename', default='', help='the name of the output file')
+    parser.add_argument('-a', '--add', action='store_true', default=False, help='append source to name of spells')
     args = parser.parse_args()
 
     source_name = ""
@@ -305,7 +309,7 @@ def main():
         monster_import(results, doc)
     elif (args.feature == 'spells'):
         print("Importing Spells")
-        spell_import(results, doc)
+        spell_import(args.source, args.add, results, doc)
     elif (args.feature == 'magicitems'):
         print("Importing Magic Items")
         item_import(results, doc)

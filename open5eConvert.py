@@ -6,7 +6,7 @@ from docx import Document
 
 def speed_to_text(speed):
     for k, v in speed.items():
-        if k not in ['walk', 'burrow', 'climb', 'fly', 'swim', 'hover']:
+        if k not in ['walk', 'burrow', 'climb', 'fly', 'swim', 'hover', 'bur.', 'lightwalking', 'notes']:
             sys.exit(f'invalid speed key found: {k}')
     speed_text = ""
     if 'walk' in speed:
@@ -27,6 +27,18 @@ def speed_to_text(speed):
         if speed_text != "":
             speed_text = speed_text + ", "
         speed_text = speed_text + f"Swim {speed['swim']} ft."
+    if 'bur.' in speed:
+        if speed_text != "":
+            speed_text = speed_text + ", "
+        speed_text = speed_text + f"Burrow {speed['bur.']} ft."
+    if 'lightwalking' in speed:
+        if speed_text != "":
+            speed_text = speed_text + ", "
+        speed_text = speed_text + f"Lightwalking {speed['lightwalking']} ft."
+    if 'notes' in speed:
+        if speed_text != "":
+            speed_text = speed_text + ", "
+        speed_text = speed_text + f"Notes {speed['notes']} ft."
     return speed_text
 
 def attr_to_text(attr):
@@ -71,7 +83,7 @@ def monster_import(results, doc):
         print('Importing ' + str(monster['name']))
         doc.add_heading(str(monster['name']), level=2)
         doc.add_paragraph(f"{monster['size'] if monster['size'].lower() != 'titanic' else 'Gargantuan'} {monster['type']}, {monster['alignment']}")
-        doc.add_paragraph(f"Armor Class {monster['armor_class']}{monster['armor_desc'] if (monster['armor_desc']) else ''}")
+        doc.add_paragraph(f"Armor Class {monster['armor_class']} {monster['armor_desc'] if (monster['armor_desc']) else ''}")
         doc.add_paragraph(f"Hit Points {monster['hit_points']} ({monster['hit_dice']})")
         doc.add_paragraph("Speed " + speed_to_text(monster['speed']))
         doc.add_paragraph("STR DEX CON INT WIS CHA")
@@ -93,6 +105,14 @@ def monster_import(results, doc):
         doc.add_paragraph("Languages " + str(monster['languages']))
         doc.add_paragraph("Challenge " + str(monster['challenge_rating']))
 
+        if monster['special_abilities']:
+            for index, a in enumerate(monster['special_abilities']):
+                p = doc.add_paragraph("")
+                runner = p.add_run(a['name'] + ". ")
+                runner.bold = True
+                runner.italic = True
+                p.add_run(a['desc'])
+                
         if monster['actions']:
             doc.add_heading("Actions", level=3)
             for index, a in enumerate(monster['actions']):
@@ -125,15 +145,6 @@ def monster_import(results, doc):
             if monster['legendary_desc']:
                 doc.add_paragraph(monster['legendary_desc'])
             for index, a in enumerate(monster['legendary_actions']):
-                p = doc.add_paragraph("")
-                runner = p.add_run(a['name'] + ". ")
-                runner.bold = True
-                runner.italic = True
-                p.add_run(a['desc'])
-
-        if monster['special_abilities']:
-            doc.add_heading("Special Abilities", level=3)
-            for index, a in enumerate(monster['special_abilities']):
                 p = doc.add_paragraph("")
                 runner = p.add_run(a['name'] + ". ")
                 runner.bold = True
